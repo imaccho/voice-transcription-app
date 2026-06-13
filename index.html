@@ -85,20 +85,56 @@
       margin-top: 64px;
       position: relative;
       width: 100%;
+      max-height: 520px;
       overflow: hidden;
     }
     .hero-img {
       width: 100%;
+      height: 520px;
       display: block;
       object-fit: cover;
+      object-position: center top;
     }
     .hero::after {
       content: '';
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      height: 140px;
-      background: linear-gradient(to bottom, transparent, var(--bg));
+      height: 180px;
+      background: linear-gradient(to bottom, transparent 0%, var(--bg) 100%);
       pointer-events: none;
+    }
+
+    /* ===== ヒーロー直下のリード文 ===== */
+    .hero-caption {
+      max-width: 820px;
+      margin: -20px auto 0;
+      padding: 0 24px 48px;
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+    }
+    .hero-caption-line {
+      width: 3px;
+      height: 80px;
+      background: linear-gradient(180deg, var(--brown-l), transparent);
+      flex-shrink: 0;
+      margin-top: 4px;
+      border-radius: 2px;
+    }
+    .hero-caption-text {}
+    .hero-caption-text h2 {
+      font-family: 'Noto Serif JP', serif;
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-weight: 700;
+      color: var(--espresso);
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+    .hero-caption-text p {
+      font-size: 0.95rem;
+      color: var(--sub);
+      line-height: 1.8;
+      max-width: 540px;
     }
 
     /* ===== コーヒーリング 区切り ===== */
@@ -474,6 +510,15 @@
 <!-- ヒーロー画像 -->
 <div class="hero">
   <img class="hero-img" src="hero.png" alt="音声の文字化支援アプリ — 話すだけで、伝わるカタチに。">
+</div>
+
+<!-- ヒーロー直下リード -->
+<div class="hero-caption">
+  <div class="hero-caption-line"></div>
+  <div class="hero-caption-text">
+    <h2>話すだけで、伝わるカタチに。</h2>
+    <p>専門スタッフがいなくても、講演会の担当者がはじめられる。<br>聴こえづらい方への文字支援を、もっとやさしく、もっと身近に。</p>
+  </div>
 </div>
 
 <!-- ① 法律 -->
