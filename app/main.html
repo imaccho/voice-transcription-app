@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceSync Console — メイン画面（モックアップ）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --sky:     #4A9FD4;
+    --sky-l:   #7BBEE5;
+    --sky-ll:  #D6EDFA;
+    --sky-bg:  #EBF6FC;
+    --mint:    #3DAA7A;
+    --mint-l:  #6DC49A;
+    --mint-ll: #D2F0E4;
+    --mint-bg: #EBF7F2;
+    --peach:   #F5845C;
+    --peach-l: #FDDDD3;
+    --ink:     #1E3A4A;
+    --ink-70:  rgba(30,58,74,0.7);
+    --ink-40:  rgba(30,58,74,0.4);
+    --ink-12:  rgba(30,58,74,0.12);
+    --ink-06:  rgba(30,58,74,0.06);
+    --white:   #FFFFFF;
+    --bg:      #F1F6FA;
+    --panel:   #F8FBFD;
+    --font:    'BIZ UDPGothic', 'Noto Sans JP', sans-serif;
+    --r:       14px;
+    --r-lg:    20px;
+  }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.7;
+    display: flex;
+  }
+  .ico { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ico svg { display: block; width: 100%; height: 100%; }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: 76px; flex-shrink: 0;
+    background: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 0;
+    gap: 6px;
+  }
+  .sb-logo {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--sky), #2d85b8);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--white); margin-bottom: 22px;
+  }
+  .sb-logo .ico { width: 22px; height: 22px; }
+  .sb-item {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.45);
+    text-decoration: none;
+    position: relative;
+    transition: all 0.18s;
+  }
+  .sb-item .ico { width: 22px; height: 22px; }
+  .sb-item:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+  .sb-item.active { background: rgba(74,159,212,0.22); color: var(--sky-l); }
+  .sb-item.active::before {
+    content: ''; position: absolute; left: -20px; top: 50%; transform: translateY(-50%);
+    width: 4px; height: 22px; border-radius: 4px; background: var(--sky);
+  }
+  .sb-label {
+    font-size: 0.58rem; margin-top: 3px; letter-spacing: 0.02em;
+  }
+  .sb-spacer { flex: 1; }
+  .sb-engine {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1);
+    width: 100%;
+  }
+  .sb-engine-dot {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--mint);
+    box-shadow: 0 0 0 3px rgba(61,170,122,0.25);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .sb-engine-txt { font-size: 0.58rem; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.4; }
+
+  /* ===== MAIN ===== */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+
+  /* Top bar */
+  .topbar {
+    height: 68px; flex-shrink: 0;
+    background: var(--white);
+    border-bottom: 1px solid var(--ink-06);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px;
+    gap: 20px;
+  }
+  .topbar-title { display: flex; align-items: center; gap: 14px; min-width: 0; flex-shrink: 1; }
+  .topbar-title h1 {
+    font-size: 1.05rem; font-weight: 700;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .event-badge {
+    display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; white-space: nowrap;
+    background: var(--sky-bg); border: 1px solid var(--sky-ll); color: var(--sky);
+    font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 20px;
+  }
+  .topbar-controls { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .device-select {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--sky-bg); border: 1.5px solid var(--sky-ll);
+    border-radius: 30px; padding: 6px 14px 6px 10px;
+    font-size: 0.78rem; color: var(--ink-70); font-weight: 700;
+  }
+  .device-select .ico { width: 15px; height: 15px; color: var(--sky); }
+  .device-select select {
+    border: none; background: transparent; font-family: var(--font);
+    font-size: 0.78rem; font-weight: 700; color: var(--ink); outline: none; cursor: pointer;
+  }
+  .btn-settings {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1.5px solid var(--ink-12); background: var(--white); color: var(--ink-70);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-settings .ico { width: 18px; height: 18px; }
+  .btn-settings:hover { border-color: var(--sky); color: var(--sky); }
+
+  /* Content grid */
+  .content {
+    flex: 1; overflow: auto;
+    padding: 24px 28px;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 20px;
+  }
+
+  /* Control card (mic) */
+  .control-card {
+    grid-column: 1; grid-row: 1;
+    background: var(--white); border: 1.5px solid var(--ink-06);
+    border-radius: var(--r-lg); padding: 24px 28px;
+    display: flex; align-items: center; gap: 24px;
+    box-shadow: 0 2px 14px rgba(30,58,74,0.05);
+  }
+  .mic-btn {
+    width: 84px; height: 84px; border-radius: 50%; flex-shrink: 0;
+    border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--sky), #2d85b8);
+    color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 24px rgba(74,159,212,0.35);
+    transition: transform 0.18s, box-shadow 0.3s, background 0.3s;
+    position: relative;
+  }
+  .mic-btn .ico { width: 32px; height: 32px; }
+  .mic-btn:hover { transform: translateY(-2px); }
+  .mic-btn.rec {
+    background: linear-gradient(135deg, var(--peach), #d8613a);
+    box-shadow: 0 6px 24px rgba(245,132,92,0.4);
+  }
+  .mic-btn.rec::after {
+    content: ''; position: absolute; inset: -8px; border-radius: 50%;
+    border: 2.5px solid var(--peach); opacity: 0.5;
+    animation: mic-ring 1.6s ease-out infinite;
+  }
+  @keyframes mic-ring {
+    0% { transform: scale(0.9); opacity: 0.6; }
+    100% { transform: scale(1.35); opacity: 0; }
+  }
+  .control-info { flex: 1; min-width: 0; }
+  .control-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.98rem; font-weight: 700; margin-bottom: 6px;
+  }
+  .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-40); }
+  .control-status.live .status-dot { background: var(--peach); animation: pulse-dot 1.4s ease-in-out infinite; }
+  .control-sub { font-size: 0.8rem; color: var(--ink-70); }
+  .control-timer {
+    font-family: 'Inter', sans-serif; font-size: 1.6rem; font-weight: 800;
+    color: var(--ink); letter-spacing: 0.02em; flex-shrink: 0;
+  }
+  .control-timer-label { font-size: 0.66rem; color: var(--ink-40); font-weight: 700; letter-spacing: 0.08em; text-align: center; }
+
+  .mic-level {
+    display: flex; align-items: flex-end; gap: 3px; height: 30px; width: 90px; flex-shrink: 0;
+  }
+  .mic-level span {
+    flex: 1; border-radius: 3px; background: var(--sky-ll);
+    transition: background 0.2s;
+  }
+  .mic-level.active span { background: linear-gradient(180deg, var(--sky), var(--sky-ll)); animation: wv 1.1s ease-in-out infinite; }
+  .mic-level span:nth-child(1){height:30%;animation-delay:0s}
+  .mic-level span:nth-child(2){height:70%;animation-delay:.1s}
+  .mic-level span:nth-child(3){height:45%;animation-delay:.2s}
+  .mic-level span:nth-child(4){height:90%;animation-delay:.3s}
+  .mic-level span:nth-child(5){height:55%;animation-delay:.4s}
+  .mic-level span:nth-child(6){height:75%;animation-delay:.5s}
+  @keyframes wv { 0%,100%{opacity:.4;transform:scaleY(.5)} 50%{opacity:1;transform:scaleY(1)} }
+
+  /* Transcript card */
+  .transcript-card {
+    grid-column: 1; grid-row: 2;
+    background: var(--white); border: 1.5px solid var(--ink-06);
+    border-radius: var(--r-lg); padding: 20px 24px;
+    display: flex; flex-direction: column; min-height: 0;
+    box-shadow: 0 2px 14px rgba(30,58,74,0.05);
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; flex-shrink: 0;
+  }
+  .card-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.92rem; font-weight: 700;
+  }
+  .card-title .ico { width: 18px; height: 18px; color: var(--sky); }
+  .char-badge {
+    font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 700;
+    color: var(--ink-40);
+  }
+  .transcript-body {
+    flex: 1; overflow-y: auto; padding-right: 6px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .t-line {
+    font-size: 0.98rem; color: var(--ink-70); line-height: 1.85;
+    padding-bottom: 10px; border-bottom: 1px dashed var(--ink-06);
+  }
+  .t-line:last-child { border-bottom: none; }
+  .t-line.live { color: var(--ink); font-weight: 700; }
+  .t-cursor {
+    display: inline-block; width: 2px; height: 15px;
+    background: var(--sky); margin-left: 2px; vertical-align: middle;
+    animation: blink-c 1s step-end infinite;
+  }
+  @keyframes blink-c { 0%,100%{opacity:1} 50%{opacity:0} }
+  .transcript-empty {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; color: var(--ink-40); font-size: 0.85rem; text-align: center;
+  }
+  .transcript-empty .ico { width: 40px; height: 40px; color: var(--sky-ll); }
+
+  /* Right column */
+  .side-col {
+    grid-column: 2; grid-row: 1 / 3;
+    display: flex; flex-direction: column; gap: 20px; min-height: 0;
+  }
+
+  .preview-card {
+    background: var(--white); border: 1.5px solid var(--ink-06);
+    border-radius: var(--r-lg); padding: 18px;
+    box-shadow: 0 2px 14px rgba(30,58,74,0.05);
+    flex-shrink: 0;
+  }
+  .preview-screen {
+    margin-top: 12px;
+    background: linear-gradient(135deg, var(--sky) 0%, #2d85b8 100%);
+    border-radius: 12px; padding: 24px 20px; min-height: 130px;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .preview-screen-label {
+    position: absolute; top: 10px; left: 14px;
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .preview-screen-label::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: #aff0d4;
+    animation: pulse-dot 1.6s ease-in-out infinite;
+  }
+  .preview-text {
+    font-size: 1.05rem; font-weight: 700; color: var(--white); line-height: 1.7;
+  }
+  .preview-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px; font-size: 0.7rem; color: var(--ink-40);
+  }
+  .conn-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--mint); font-weight: 700;
+  }
+  .conn-badge .ico { width: 13px; height: 13px; }
+
+  .info-card {
+    background: var(--white); border: 1.5px solid var(--ink-06);
+    border-radius: var(--r-lg); padding: 18px 20px;
+    box-shadow: 0 2px 14px rgba(30,58,74,0.05);
+  }
+  .info-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--ink-06);
+  }
+  .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .info-row:first-child { padding-top: 0; }
+  .info-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.82rem; color: var(--ink-70); font-weight: 500;
+  }
+  .info-label .ico { width: 16px; height: 16px; color: var(--sky); }
+  .info-value {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.82rem; font-weight: 700; color: var(--ink);
+  }
+  .info-value .chip {
+    background: var(--sky-bg); color: var(--sky); font-size: 0.7rem; font-weight: 700;
+    padding: 2px 9px; border-radius: 20px; font-family: 'Inter', sans-serif;
+  }
+  .link-btn {
+    font-size: 0.76rem; color: var(--sky); font-weight: 700; text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .link-btn:hover { color: #2d85b8; }
+
+  .names-card {
+    background: var(--white); border: 1.5px solid var(--ink-06);
+    border-radius: var(--r-lg); padding: 18px 20px; flex: 1; min-height: 0;
+    display: flex; flex-direction: column;
+    box-shadow: 0 2px 14px rgba(30,58,74,0.05);
+  }
+  .name-chips { display: flex; flex-wrap: wrap; gap: 8px; overflow-y: auto; }
+  .name-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--mint-bg); border: 1px solid var(--mint-ll);
+    color: #2d8f60; font-size: 0.78rem; font-weight: 700;
+    padding: 5px 12px 5px 8px; border-radius: 20px;
+  }
+  .name-chip .ico { width: 20px; height: 20px; border-radius: 50%; background: var(--mint); color: var(--white); font-size: 0.6rem; }
+  .name-chip .kana { color: #4fa87d; font-weight: 500; font-size: 0.68rem; }
+
+  /* Bottom status bar */
+  .statusbar {
+    height: 34px; flex-shrink: 0;
+    background: var(--ink); color: rgba(255,255,255,0.6);
+    display: flex; align-items: center; gap: 22px;
+    padding: 0 24px; font-size: 0.72rem;
+  }
+  .statusbar .sb-stat { display: flex; align-items: center; gap: 6px; }
+  .statusbar .ico { width: 13px; height: 13px; }
+  .statusbar .sb-stat.ok { color: var(--mint-l); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><line x1="12" y1="17.5" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span></div>
+
+  <a href="#" class="sb-item active" title="メイン">
+    <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><line x1="12" y1="17.5" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span>
+  </a>
+  <a href="#" class="sb-item" title="事前学習資料">
+    <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
+  </a>
+  <a href="#" class="sb-item" title="表示許可リスト（名前）">
+    <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.3"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 5.2a3.3 3.3 0 0 1 0 6.6"/><path d="M17.5 20a6.5 6.5 0 0 0-3-5.4"/></svg></span>
+  </a>
+  <a href="#" class="sb-item" title="ログ">
+    <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg></span>
+  </a>
+  <a href="#" class="sb-item" title="設定">
+    <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.4.7a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.3a7.6 7.6 0 0 0-2.6 1.5l-2.4-.7-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.4-.7a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.3a7.6 7.6 0 0 0 2.6-1.5l2.4.7 2-3.4z"/></svg></span>
+  </a>
+
+  <div class="sb-spacer"></div>
+
+  <div class="sb-engine">
+    <div class="sb-engine-dot"></div>
+    <div class="sb-engine-txt">Vosk<br>ローカル動作中</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-title">
+      <h1>第12回 感謝の集い — 表彰式</h1>
+      <span class="event-badge"><span class="ico" style="width:12px;height:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg></span>準備完了</span>
+    </div>
+    <div class="topbar-controls">
+      <div class="device-select">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><line x1="12" y1="17.5" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span>
+        <select id="mic-select">
+          <option>会場マイク（USB Audio）</option>
+          <option>内蔵マイク</option>
+        </select>
+      </div>
+      <div class="device-select">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2"/><line x1="8.5" y1="21" x2="15.5" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
+        <select id="display-select">
+          <option>HDMI-1（会場スクリーン）</option>
+          <option>未接続</option>
+        </select>
+      </div>
+      <button class="btn-settings" title="設定"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.4.7a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.3a7.6 7.6 0 0 0-2.6 1.5l-2.4-.7-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.4-.7a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.3a7.6 7.6 0 0 0 2.6-1.5l2.4.7 2-3.4z"/></svg></span></button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- MIC CONTROL -->
+    <div class="control-card">
+      <button class="mic-btn" id="mic-btn" onclick="toggleRecording()">
+        <span class="ico" id="mic-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><line x1="12" y1="17.5" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span>
+      </button>
+      <div class="control-info">
+        <div class="control-status" id="control-status"><span class="status-dot"></span>待機中</div>
+        <div class="control-sub" id="control-sub">マイクボタンを押すと文字起こしを開始します</div>
+      </div>
+      <div class="mic-level" id="mic-level">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div>
+        <div class="control-timer" id="control-timer">00:00</div>
+        <div class="control-timer-label">経過時間</div>
+      </div>
+    </div>
+
+    <!-- TRANSCRIPT -->
+    <div class="transcript-card">
+      <div class="card-head">
+        <div class="card-title"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4V5z"/></svg></span>ライブ文字起こし</div>
+        <span class="char-badge" id="char-count">0文字</span>
+      </div>
+      <div class="transcript-body" id="transcript-body">
+        <div class="transcript-empty" id="transcript-empty">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><line x1="12" y1="17.5" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span>
+          マイクボタンを押すと、ここに文字起こし結果が表示されます。
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDE COLUMN -->
+    <div class="side-col">
+
+      <!-- SCREEN PREVIEW -->
+      <div class="preview-card">
+        <div class="card-title"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2"/><line x1="8.5" y1="21" x2="15.5" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>会場スクリーン表示プレビュー</div>
+        <div class="preview-screen">
+          <div class="preview-screen-label">LIVE PREVIEW</div>
+          <div class="preview-text" id="preview-text">表示待機中です</div>
+        </div>
+        <div class="preview-meta">
+          <span class="conn-badge"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>HDMI-1 接続中</span>
+          <span>文字サイズ・色は設定から変更できます</span>
+        </div>
+      </div>
+
+      <!-- INFO -->
+      <div class="info-card">
+        <div class="info-row">
+          <div class="info-label"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>事前学習資料</div>
+          <div class="info-value"><span class="chip">4件</span><a href="#" class="link-btn">管理 →</a></div>
+        </div>
+        <div class="info-row">
+          <div class="info-label"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 5 13.5h6L11 22l8-11.5h-6z"/></svg></span>認識エンジン</div>
+          <div class="info-value">Vosk（ローカル）</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg></span>ログ</div>
+          <div class="info-value"><a href="#" class="link-btn">履歴を見る →</a></div>
+        </div>
+      </div>
+
+      <!-- NAMES -->
+      <div class="names-card">
+        <div class="card-head">
+          <div class="card-title"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.3"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 5.2a3.3 3.3 0 0 1 0 6.6"/><path d="M17.5 20a6.5 6.5 0 0 0-3-5.4"/></svg></span>表示許可リスト</div>
+          <span class="char-badge">5名 登録済み</span>
+        </div>
+        <div class="name-chips">
+          <span class="name-chip"><span class="ico">✓</span>田中 太郎<span class="kana">たなか たろう</span></span>
+          <span class="name-chip"><span class="ico">✓</span>佐藤 次郎<span class="kana">さとう じろう</span></span>
+          <span class="name-chip"><span class="ico">✓</span>髙橋 美咲<span class="kana">たかはし みさき</span></span>
+          <span class="name-chip"><span class="ico">✓</span>山本 花子<span class="kana">やまもと はなこ</span></span>
+          <span class="name-chip"><span class="ico">✓</span>渡邉 健一<span class="kana">わたなべ けんいち</span></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <span class="sb-stat ok"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>マイク: 会場マイク（USB Audio）</span>
+    <span class="sb-stat ok"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>HDMI-1: 接続中</span>
+    <span class="sb-stat">エンジン: Vosk（オフライン）</span>
+    <span class="sb-stat" id="status-charcount">文字数: 0</span>
+  </div>
+
+</div>
+
+<script>
+  const SCRIPT_LINES = [
+    "本日はお忙しい中、お集まりいただきありがとうございます。",
+    "ただいまより、第12回感謝の集い、表彰式を開催いたします。",
+    "はじめに、主催者よりご挨拶を申し上げます。",
+    "今年度、特に功績のあった皆様をご紹介いたします。",
+    "それでは、表彰状の授与に移らせていただきます。"
+  ];
+
+  let recording = false;
+  let timerHandle = null;
+  let lineHandle = null;
+  let elapsedSec = 0;
+  let lineIndex = 0;
+  let totalChars = 0;
+
+  const micBtn = document.getElementById('mic-btn');
+  const micLevel = document.getElementById('mic-level');
+  const controlStatus = document.getElementById('control-status');
+  const controlSub = document.getElementById('control-sub');
+  const controlTimer = document.getElementById('control-timer');
+  const transcriptBody = document.getElementById('transcript-body');
+  const transcriptEmpty = document.getElementById('transcript-empty');
+  const charCount = document.getElementById('char-count');
+  const statusCharcount = document.getElementById('status-charcount');
+  const previewText = document.getElementById('preview-text');
+
+  function toggleRecording() {
+    recording = !recording;
+    if (recording) startRecording(); else stopRecording();
+  }
+
+  function startRecording() {
+    micBtn.classList.add('rec');
+    micLevel.classList.add('active');
+    controlStatus.classList.add('live');
+    controlStatus.innerHTML = '<span class="status-dot"></span>文字起こし中';
+    controlSub.textContent = 'マイクから音声を取得し、リアルタイムで変換しています';
+    if (transcriptEmpty) transcriptEmpty.remove();
+
+    timerHandle = setInterval(() => {
+      elapsedSec++;
+      const m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+      const s = String(elapsedSec % 60).padStart(2, '0');
+      controlTimer.textContent = `${m}:${s}`;
+    }, 1000);
+
+    lineHandle = setInterval(() => {
+      if (lineIndex >= SCRIPT_LINES.length) { lineIndex = 0; }
+      const line = SCRIPT_LINES[lineIndex];
+      addTranscriptLine(line);
+      previewText.textContent = line;
+      lineIndex++;
+    }, 3200);
+  }
+
+  function stopRecording() {
+    micBtn.classList.remove('rec');
+    micLevel.classList.remove('active');
+    controlStatus.classList.remove('live');
+    controlStatus.innerHTML = '<span class="status-dot"></span>待機中';
+    controlSub.textContent = 'マイクボタンを押すと文字起こしを再開します';
+    clearInterval(timerHandle);
+    clearInterval(lineHandle);
+  }
+
+  function addTranscriptLine(text) {
+    const prevLive = transcriptBody.querySelector('.t-line.live');
+    if (prevLive) prevLive.classList.remove('live');
+
+    const div = document.createElement('div');
+    div.className = 't-line live';
+    div.innerHTML = text + '<span class="t-cursor"></span>';
+    transcriptBody.appendChild(div);
+    transcriptBody.scrollTop = transcriptBody.scrollHeight;
+
+    totalChars += text.length;
+    charCount.textContent = `${totalChars}文字`;
+    statusCharcount.textContent = `文字数: ${totalChars}`;
+  }
+</script>
+</body>
+</html>
