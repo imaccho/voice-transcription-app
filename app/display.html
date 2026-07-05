@@ -6,9 +6,13 @@
 <title>VoiceSync — 会場スクリーン表示</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Noto+Serif+JP:wght@700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --line-font-size: 3.1vw;
+    --line-font-family: 'BIZ UDPGothic', 'Noto Sans JP', sans-serif;
+  }
   html, body {
     height: 100%;
     background: #0d1b24;
@@ -16,25 +20,38 @@
     font-family: 'BIZ UDPGothic', 'Noto Sans JP', sans-serif;
     overflow: hidden;
   }
+  /* 常に7行分のグリッドを確保し、上から均等な間隔で並べる。
+     行数が少ない間は上側が空欄のままになる（下に寄せない）。 */
   #stage {
     height: 100%;
+    display: grid;
+    grid-template-rows: repeat(7, minmax(0, 1fr));
+    padding: 3vh 6vw;
+  }
+  .row {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 6vh 8vw;
-    text-align: center;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
   }
-  #text {
-    font-size: 5vw;
+  .line {
+    font-size: var(--line-font-size);
+    font-family: var(--line-font-family);
     font-weight: 700;
-    line-height: 1.6;
-    max-width: 100%;
-    word-break: keep-all;
-    transition: opacity 0.15s;
+    line-height: 1.3;
+    white-space: nowrap;   /* 折り返さず1行に収め、長い行は自動縮小して対応する */
+    min-width: 0;
+    opacity: 0.4;
+    transition: opacity 0.2s;
   }
-  #partial {
-    opacity: 0.55;
-  }
+  /* 直近の行ほどはっきり見えるように濃淡をつける */
+  .line.age-0 { opacity: 1; }
+  .line.age-1 { opacity: 0.85; }
+  .line.age-2 { opacity: 0.7; }
+  .line.age-3 { opacity: 0.55; }
+  .line.partial { opacity: 0.55; }
+  .diff-mark { color: #FF5C5C; } /* 修正された文字だけ赤色にする */
   #status {
     position: fixed; bottom: 18px; right: 24px;
     font-size: 0.9rem; color: rgba(255,255,255,0.35);
@@ -46,20 +63,128 @@
 </style>
 </head>
 <body>
-  <div id="stage">
-    <div id="text">表示待機中です</div>
-  </div>
+  <div id="stage"></div>
   <div id="status" class="disconnected"><span class="dot"></span><span id="status-label">接続中...</span></div>
 
 <script>
-  const textEl = document.getElementById('text');
+  const MAX_LINES = 7;
+  const stage = document.getElementById('stage');
   const statusEl = document.getElementById('status');
   const statusLabel = document.getElementById('status-label');
 
-  let finalText = '';
+  // 確定済みの行を { seq, text } の形で最大 (MAX_LINES - 1) 件保持し、
+  // 認識中の行(partial)を含めて常に最大 MAX_LINES 行の「枠」を描画する。
+  // 枠が余る場合は空行のまま上側に残し、下から詰めない。
+  let history = [];
+  let currentPartial = '';
 
   function render() {
-    textEl.innerHTML = finalText;
+    const capacity = MAX_LINES - (currentPartial ? 1 : 0);
+    const shown = history.slice(-capacity); // 古い→新しいの順
+    const contentCount = shown.length + (currentPartial ? 1 : 0);
+    const emptyCount = MAX_LINES - contentCount;
+
+    // 行数が7に満たない間は上から詰めて表示し、下側を空欄のままにする
+    // （7行埋まったら、古い行が上から押し出されるように見える）
+    stage.innerHTML = '';
+    shown.forEach((item, i) => {
+      const ageFromBottom = (contentCount - 1) - i;
+      const row = document.createElement('div');
+      row.className = 'row';
+      const line = document.createElement('div');
+      line.className = `line age-${Math.min(ageFromBottom, 3)}`;
+      if (item.text !== item.original) {
+        line.innerHTML = diffHighlight(item.original, item.text);
+      } else {
+        line.textContent = item.text;
+      }
+      row.appendChild(line);
+      stage.appendChild(row);
+    });
+    if (currentPartial) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      const line = document.createElement('div');
+      line.className = 'line partial age-0';
+      line.textContent = currentPartial;
+      row.appendChild(line);
+      stage.appendChild(row);
+    }
+    for (let i = 0; i < emptyCount; i++) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      stage.appendChild(row);
+    }
+
+    fitAllLines();
+  }
+
+  // ===== 元の文字列と現在の文字列を比較し、変更箇所だけ<span>で囲んだHTMLを作る =====
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function diffHighlight(original, edited) {
+    const n = original.length, m = edited.length;
+    const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+    for (let i = 1; i <= n; i++) {
+      for (let j = 1; j <= m; j++) {
+        dp[i][j] = original[i - 1] === edited[j - 1]
+          ? dp[i - 1][j - 1] + 1
+          : Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+    const matched = new Array(m).fill(false);
+    let i = n, j = m;
+    while (i > 0 && j > 0) {
+      if (original[i - 1] === edited[j - 1]) {
+        matched[j - 1] = true;
+        i--; j--;
+      } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+        i--;
+      } else {
+        j--;
+      }
+    }
+
+    let html = '';
+    let buffer = '';
+    let inDiff = false;
+    for (let k = 0; k < m; k++) {
+      const isDiff = !matched[k];
+      if (isDiff !== inDiff && buffer) {
+        html += inDiff ? `<span class="diff-mark">${escapeHtml(buffer)}</span>` : escapeHtml(buffer);
+        buffer = '';
+      }
+      inDiff = isDiff;
+      buffer += edited[k];
+    }
+    if (buffer) html += inDiff ? `<span class="diff-mark">${escapeHtml(buffer)}</span>` : escapeHtml(buffer);
+    return html || escapeHtml(edited);
+  }
+
+  // ===== 長い行は自動的に文字を縮小して1行に収める（オートフィット） =====
+  function fitAllLines() {
+    const baseSize = getComputedStyle(document.documentElement).getPropertyValue('--line-font-size').trim();
+    const baseSizeNum = parseFloat(baseSize);
+    const unit = baseSize.replace(/[0-9.]/g, '') || 'vw';
+
+    stage.querySelectorAll('.line').forEach(line => {
+      line.style.fontSize = baseSize; // 一旦基準サイズに戻してから測る
+      const row = line.parentElement;
+      const available = row.clientWidth;
+      const needed = line.scrollWidth;
+      if (available > 0 && needed > available) {
+        const scale = (available / needed) * 0.97; // 少し余裕を持たせる
+        line.style.fontSize = `${(baseSizeNum * scale).toFixed(2)}${unit}`;
+      }
+    });
+  }
+
+  function applySettings(msg) {
+    if (msg.fontSize) document.documentElement.style.setProperty('--line-font-size', msg.fontSize);
+    if (msg.fontFamily) document.documentElement.style.setProperty('--line-font-family', msg.fontFamily);
+    fitAllLines(); // 基準サイズが変わったので、表示中の行も再計算する
   }
 
   function connect() {
@@ -76,13 +201,52 @@
     ws.onmessage = (ev) => {
       const msg = JSON.parse(ev.data);
       if (msg.type === 'final') {
-        finalText = msg.text;
+        currentPartial = '';
+        const newItem = { seq: msg.seq, text: msg.text, original: msg.text };
+        if (msg.insertAfterSeq != null) {
+          // 行の分割で生まれた行は、元の行のすぐ次に挿入する
+          const idx = history.findIndex(h => h.seq === msg.insertAfterSeq);
+          if (idx !== -1) {
+            history.splice(idx + 1, 0, newItem);
+          } else {
+            history.push(newItem);
+          }
+        } else {
+          history.push(newItem);
+        }
+        if (history.length > MAX_LINES - 1) {
+          history = history.slice(-(MAX_LINES - 1));
+        }
         render();
       } else if (msg.type === 'partial') {
-        textEl.innerHTML = finalText + `<span id="partial">${msg.text}</span>`;
+        currentPartial = msg.text;
+        render();
+      } else if (msg.type === 'correction') {
+        // メイン画面側で確定行が修正された → 該当行を差し替えて即座に反映
+        const item = history.find(h => h.seq === msg.seq);
+        if (item) {
+          item.text = msg.text;
+          render();
+        }
+      } else if (msg.type === 'merge') {
+        // Shift+Enterでの合流。差分の赤字は出さず、そのまま新しい基準にする
+        const item = history.find(h => h.seq === msg.seq);
+        if (item) {
+          item.text = msg.text;
+          item.original = msg.text;
+          render();
+        }
+      } else if (msg.type === 'settings') {
+        applySettings(msg);
+      } else if (msg.type === 'clear') {
+        // 休憩に入る際などに、運用者が画面表示をクリアした
+        history = [];
+        currentPartial = '';
+        render();
       }
     };
   }
+  render();
   connect();
 </script>
 </body>

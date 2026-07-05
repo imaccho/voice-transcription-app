@@ -24,7 +24,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from audio_source import MicSource, WavFileSource, list_input_devices
-from recognizer import VoskEngine
+from recognizer import VoskEngine, ensure_period
 
 APP_DIR = Path(__file__).parent.parent / "app"
 MODEL_DIR = Path(__file__).parent.parent / "poc" / "vosk-check" / "vosk-model-small-ja-0.22"
@@ -38,6 +38,11 @@ _state = {
     "recording": False,
     "source": None,       # MicSource | WavFileSource
     "thread": None,        # threading.Thread
+    "final_seq": 0,        # 確定行の連番。修正メッセージがどの行を指すか特定するために使う
+    "display_settings": {
+        "fontSize": "3.1vw",
+        "fontFamily": "'BIZ UDPGothic', 'Noto Sans JP', sans-serif",
+    },
 }
 
 _clients: set[WebSocket] = set()
@@ -48,7 +53,8 @@ def _run_recognition(source) -> None:
         event_queue.put({"type": "partial", "text": text})
 
     def on_final(text: str) -> None:
-        event_queue.put({"type": "final", "text": text})
+        _state["final_seq"] += 1
+        event_queue.put({"type": "final", "seq": _state["final_seq"], "text": text})
 
     try:
         engine.run(source, on_partial, on_final)
@@ -108,6 +114,9 @@ def start_recording(payload: Optional[dict] = None):
 
     _state["source"] = source
     _state["recording"] = True
+    # final_seq はここでリセットしない。停止→再開しただけで文字が消えては
+    # いけないため、続きの連番のまま画面の表示を維持する。
+    # 画面を空にしたい場合は運用者が明示的に「クリア」ボタンを押す。
     thread = threading.Thread(target=_run_recognition, args=(source,), daemon=True)
     _state["thread"] = thread
     thread.start()
@@ -129,9 +138,66 @@ def stop_recording():
 async def ws_endpoint(websocket: WebSocket):
     await websocket.accept()
     _clients.add(websocket)
+    # 新規接続時に、現在の表示設定（文字サイズ・フォント）を即座に送っておく。
+    # display.html をあとから開き直した場合も、直前の設定が復元されるように。
+    await websocket.send_json({"type": "settings", **_state["display_settings"]})
     try:
         while True:
-            await websocket.receive_text()  # クライアントからは何も送らない想定。切断検知用
+            raw = await websocket.receive_text()
+            try:
+                msg = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if msg.get("type") == "correction":
+                # 運用者がライブ文字起こしの確定行を修正した通知。
+                # 同じキューに乗せて全クライアント（本人含む）へ配信し、
+                # HDMI表示画面にも即座に反映させる
+                event_queue.put({
+                    "type": "correction",
+                    "seq": msg.get("seq"),
+                    "text": msg.get("text", ""),
+                })
+            elif msg.get("type") == "settings":
+                # 運用者がスクリーン表示の文字サイズ・フォントを変更した通知
+                if "fontSize" in msg:
+                    _state["display_settings"]["fontSize"] = msg["fontSize"]
+                if "fontFamily" in msg:
+                    _state["display_settings"]["fontFamily"] = msg["fontFamily"]
+                event_queue.put({"type": "settings", **_state["display_settings"]})
+            elif msg.get("type") == "manual":
+                # 運用者がPCから直接入力したテキスト（休憩案内など）。
+                # 音声認識の確定行と同じ扱いにして、通常の行として画面に流す
+                text = msg.get("text", "").strip()
+                if text:
+                    _state["final_seq"] += 1
+                    event_queue.put({"type": "final", "seq": _state["final_seq"], "text": ensure_period(text)})
+            elif msg.get("type") == "split":
+                # 文の途中で改行されてしまった行を、カーソル位置で分割した際の
+                # 「カーソルより後ろ」のテキスト。分割で生まれただけなので句点は
+                # 付けず、元の行のすぐ次に表示されるよう insertAfterSeq を渡す
+                text = msg.get("text", "").strip()
+                after_seq = msg.get("afterSeq")
+                if text:
+                    _state["final_seq"] += 1
+                    event_queue.put({
+                        "type": "final",
+                        "seq": _state["final_seq"],
+                        "text": text,
+                        "insertAfterSeq": after_seq,
+                    })
+            elif msg.get("type") == "merge":
+                # Shift+Enterで分割したテキストを、次の行の先頭に合流させた通知。
+                # 「correction」とは違い、合流後の文章をそのまま新しい基準にするため
+                # 赤字の差分表示は出さない
+                event_queue.put({
+                    "type": "merge",
+                    "seq": msg.get("seq"),
+                    "text": msg.get("text", ""),
+                })
+            elif msg.get("type") == "clear":
+                # 休憩に入る際などに、運用者が画面表示を手動でクリアする
+                _state["final_seq"] = 0
+                event_queue.put({"type": "clear"})
     except WebSocketDisconnect:
         _clients.discard(websocket)
 

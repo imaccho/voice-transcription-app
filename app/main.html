@@ -134,6 +134,31 @@
   .btn-settings .ico { width: 18px; height: 18px; }
   .btn-settings:hover { border-color: var(--sky); color: var(--sky); }
 
+  .settings-wrap { position: relative; }
+  .settings-panel {
+    position: absolute; top: 48px; right: 0; z-index: 300;
+    width: 280px;
+    background: var(--white); border: 1.5px solid var(--ink-12);
+    border-radius: var(--r-lg); box-shadow: 0 12px 40px rgba(30,58,74,0.18);
+    padding: 18px 20px;
+  }
+  .settings-title {
+    font-size: 0.86rem; font-weight: 700; color: var(--ink); margin-bottom: 14px;
+  }
+  .settings-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.78rem; font-weight: 700; color: var(--ink-70); margin-bottom: 6px;
+  }
+  .settings-label span { color: var(--sky); font-family: 'Inter', sans-serif; }
+  #font-size-range { width: 100%; margin-bottom: 16px; accent-color: var(--sky); }
+  #font-family-select {
+    width: 100%; padding: 8px 10px; margin-bottom: 12px;
+    border: 1.5px solid var(--sky-ll); border-radius: 10px;
+    font-family: var(--font); font-size: 0.82rem; color: var(--ink);
+    background: var(--sky-bg); outline: none; cursor: pointer;
+  }
+  .settings-note { font-size: 0.7rem; color: var(--ink-40); line-height: 1.6; }
+
   /* Content grid */
   .content {
     flex: 1; overflow: auto;
@@ -228,16 +253,49 @@
     font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 700;
     color: var(--ink-40);
   }
+  .manual-row {
+    display: flex; gap: 8px; margin-bottom: 14px; flex-shrink: 0;
+  }
+  .manual-row input {
+    flex: 1; min-width: 0;
+    padding: 9px 12px; border: 1.5px solid var(--sky-ll); border-radius: 10px;
+    font-family: var(--font); font-size: 0.84rem; color: var(--ink);
+    background: var(--sky-bg); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .manual-row input:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(74,159,212,0.14); background: var(--white); }
+  .manual-row input::placeholder { color: var(--ink-40); }
+  .btn-manual-send, .btn-manual-clear {
+    flex-shrink: 0; border: none; border-radius: 10px;
+    font-family: var(--font); font-size: 0.82rem; font-weight: 700;
+    padding: 0 16px; cursor: pointer; transition: all 0.18s;
+  }
+  .btn-manual-send { background: var(--sky); color: var(--white); }
+  .btn-manual-send:hover { background: #2d85b8; }
+  .btn-manual-clear { background: var(--peach-l); color: var(--peach); border: 1.5px solid #FDDDD3; }
+  .btn-manual-clear:hover { background: #FAC8B8; }
   .transcript-body {
     flex: 1; overflow-y: auto; padding-right: 6px;
     display: flex; flex-direction: column; gap: 10px;
   }
   .t-line {
     font-size: 0.98rem; color: var(--ink-70); line-height: 1.85;
-    padding-bottom: 10px; border-bottom: 1px dashed var(--ink-06);
+    padding: 2px 8px 10px; margin: 0 -8px; border-bottom: 1px dashed var(--ink-06);
+    border-radius: 6px; cursor: text; outline: none;
+    transition: background 0.15s;
   }
   .t-line:last-child { border-bottom: none; }
   .t-line.live { color: var(--ink); font-weight: 700; }
+  .t-line:hover { background: var(--sky-bg); }
+  .t-line:focus { background: var(--sky-ll); }
+  .t-line.edited::after {
+    content: '編集済み';
+    display: inline-block; margin-left: 8px;
+    font-size: 0.65rem; font-weight: 700; color: var(--mint);
+    background: var(--mint-bg); border: 1px solid var(--mint-ll);
+    padding: 1px 8px; border-radius: 10px; vertical-align: middle;
+  }
+  .diff-mark { color: #DC2626; font-weight: 700; }
   .t-cursor {
     display: inline-block; width: 2px; height: 15px;
     background: var(--sky); margin-left: 2px; vertical-align: middle;
@@ -282,6 +340,7 @@
   .preview-text {
     font-size: 1.05rem; font-weight: 700; color: var(--white); line-height: 1.7;
   }
+  .preview-text .diff-mark { color: #FF6B6B; } /* 青背景でも視認しやすい明るめの赤 */
   .preview-meta {
     display: flex; justify-content: space-between; align-items: center;
     margin-top: 10px; font-size: 0.7rem; color: var(--ink-40);
@@ -404,7 +463,22 @@
           <option>未接続</option>
         </select>
       </div>
-      <button class="btn-settings" title="設定"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.4.7a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.3a7.6 7.6 0 0 0-2.6 1.5l-2.4-.7-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.4-.7a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.3a7.6 7.6 0 0 0 2.6-1.5l2.4.7 2-3.4z"/></svg></span></button>
+      <div class="settings-wrap">
+        <button class="btn-settings" title="スクリーン表示の設定" onclick="toggleSettingsPanel()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.4.7a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.3a7.6 7.6 0 0 0-2.6 1.5l-2.4-.7-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.4-.7a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.3a7.6 7.6 0 0 0 2.6-1.5l2.4.7 2-3.4z"/></svg></span></button>
+        <div class="settings-panel" id="settings-panel" style="display:none">
+          <div class="settings-title">スクリーン表示の設定</div>
+          <label class="settings-label">文字サイズ <span id="font-size-label">3.1vw</span></label>
+          <input type="range" id="font-size-range" min="1.5" max="6" step="0.1" value="3.1">
+          <label class="settings-label">フォント</label>
+          <select id="font-family-select">
+            <option value="'BIZ UDPGothic', 'Noto Sans JP', sans-serif">UDゴシック（読みやすい）</option>
+            <option value="'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif">ゴシック体（標準）</option>
+            <option value="'Hiragino Mincho ProN', 'Yu Mincho', serif">明朝体（標準）</option>
+            <option value="'Noto Serif JP', serif">明朝体（Web）</option>
+          </select>
+          <p class="settings-note">変更はスクリーン表示に即座に反映されます</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -432,8 +506,13 @@
     <!-- TRANSCRIPT -->
     <div class="transcript-card">
       <div class="card-head">
-        <div class="card-title"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4V5z"/></svg></span>ライブ文字起こし</div>
+        <div class="card-title"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4V5z"/></svg></span>ライブ文字起こし<span style="font-size:0.72rem;font-weight:500;color:var(--ink-40);margin-left:6px;">（クリックして修正できます）</span></div>
         <span class="char-badge" id="char-count">0文字</span>
+      </div>
+      <div class="manual-row">
+        <input type="text" id="manual-text-input" placeholder="例: ただいま休憩中です。15:30に再開いたします。">
+        <button class="btn-manual-send" onclick="sendManualText()">画面に表示</button>
+        <button class="btn-manual-clear" onclick="clearScreen()">クリア</button>
       </div>
       <div class="transcript-body" id="transcript-body">
         <div class="transcript-empty" id="transcript-empty">
@@ -509,6 +588,8 @@
   let elapsedSec = 0;
   let totalChars = 0;
   let ws = null;
+  let lastFinalSeq = null; // プレビュー欄に表示中の行がどのseqか（修正の反映に使う）
+  const originalTextBySeq = {}; // 各行の「確定直後・修正前」のテキスト（差分表示の基準）
 
   const micBtn = document.getElementById('mic-btn');
   const micLevel = document.getElementById('mic-level');
@@ -517,10 +598,15 @@
   const controlTimer = document.getElementById('control-timer');
   const transcriptBody = document.getElementById('transcript-body');
   const transcriptEmpty = document.getElementById('transcript-empty');
+  const emptyStateHTML = transcriptBody.innerHTML; // クリア時に元の空表示に戻すため保持しておく
   const charCount = document.getElementById('char-count');
   const statusCharcount = document.getElementById('status-charcount');
   const previewText = document.getElementById('preview-text');
   const micSelect = document.getElementById('mic-select');
+  const settingsPanel = document.getElementById('settings-panel');
+  const fontSizeRange = document.getElementById('font-size-range');
+  const fontSizeLabel = document.getElementById('font-size-label');
+  const fontFamilySelect = document.getElementById('font-family-select');
 
   // ===== WebSocket（バックエンドからの認識結果を受信） =====
   function connectWS() {
@@ -528,10 +614,36 @@
     ws.onmessage = (ev) => {
       const msg = JSON.parse(ev.data);
       if (msg.type === 'final') {
-        addTranscriptLine(msg.text);
+        lastFinalSeq = msg.seq;
+        originalTextBySeq[msg.seq] = msg.text;
+        finalizeLine(msg.seq, msg.text, msg.insertAfterSeq);
         previewText.textContent = msg.text;
       } else if (msg.type === 'partial') {
+        updateLivePartial(msg.text);
         previewText.textContent = msg.text;
+      } else if (msg.type === 'correction') {
+        applyRemoteCorrection(msg.seq, msg.text);
+        if (msg.seq === lastFinalSeq) {
+          const original = originalTextBySeq[msg.seq] ?? msg.text;
+          previewText.innerHTML = diffHighlight(original, msg.text);
+        }
+      } else if (msg.type === 'merge') {
+        applyMerge(msg.seq, msg.text);
+        if (msg.seq === lastFinalSeq) previewText.textContent = msg.text;
+      } else if (msg.type === 'settings') {
+        if (msg.fontSize) {
+          fontSizeRange.value = parseFloat(msg.fontSize);
+          fontSizeLabel.textContent = msg.fontSize;
+        }
+        if (msg.fontFamily) fontFamilySelect.value = msg.fontFamily;
+      } else if (msg.type === 'clear') {
+        // 休憩時などに画面表示をクリアした通知（自分の操作・他クライアントからの操作どちらでも届く）
+        transcriptBody.innerHTML = emptyStateHTML;
+        previewText.textContent = '表示待機中です';
+        lastFinalSeq = null;
+        totalChars = 0;
+        charCount.textContent = '0文字';
+        statusCharcount.textContent = '文字数: 0';
       } else if (msg.type === 'stopped' && recording) {
         // WAVファイルの再生終了など、バックエンド側で認識が止まった場合
         recording = false;
@@ -541,6 +653,45 @@
     ws.onclose = () => setTimeout(connectWS, 2000);
   }
   connectWS();
+
+  // ===== スクリーン表示設定（文字サイズ・フォント） =====
+  function toggleSettingsPanel() {
+    settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
+  }
+  document.addEventListener('click', (ev) => {
+    if (!ev.target.closest('.settings-wrap') && settingsPanel.style.display !== 'none') {
+      settingsPanel.style.display = 'none';
+    }
+  });
+  function sendSettings(partial) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'settings', ...partial }));
+    }
+  }
+  fontSizeRange.addEventListener('input', () => {
+    const val = `${fontSizeRange.value}vw`;
+    fontSizeLabel.textContent = val;
+    sendSettings({ fontSize: val });
+  });
+  fontFamilySelect.addEventListener('change', () => {
+    sendSettings({ fontFamily: fontFamilySelect.value });
+  });
+
+  // ===== 手動テキスト入力（休憩案内など、PCから直接スクリーンに表示） =====
+  function sendManualText() {
+    const input = document.getElementById('manual-text-input');
+    const text = input.value.trim();
+    if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify({ type: 'manual', text }));
+    input.value = '';
+  }
+
+  // ===== 画面表示のクリア（休憩に入る際など） =====
+  function clearScreen() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    if (!confirm('スクリーンの表示をクリアします。よろしいですか？')) return;
+    ws.send(JSON.stringify({ type: 'clear' }));
+  }
 
   // ===== マイクデバイス一覧の取得 =====
   async function loadDevices() {
@@ -615,19 +766,223 @@
     controlStatus.innerHTML = '<span class="status-dot"></span>待機中';
     controlSub.textContent = 'マイクボタンを押すと文字起こしを再開します';
     clearInterval(timerHandle);
+
+    // 認識が止まった時点で確定(final)されないまま残っていた行は、
+    // サーバー側に対応するseqが無く修正をスクリーン側に反映できないため、
+    // 見た目だけ「認識中」表示を消して、編集は不可のままにしておく
+    const lastLive = transcriptBody.querySelector('.t-line.live');
+    if (lastLive) {
+      lastLive.classList.remove('live');
+    }
   }
 
-  function addTranscriptLine(text) {
-    const prevLive = transcriptBody.querySelector('.t-line.live');
-    if (prevLive) prevLive.classList.remove('live');
+  // ===== 認識中の行をリアルタイムに表示（スクリーン側と同時に育つように） =====
+  function updateLivePartial(text) {
+    let div = transcriptBody.querySelector('.t-line.live');
+    if (!div) {
+      div = document.createElement('div');
+      div.className = 't-line live';
+      transcriptBody.appendChild(div);
+    }
+    div.textContent = text;
+    transcriptBody.scrollTop = transcriptBody.scrollHeight;
+  }
 
-    const div = document.createElement('div');
-    div.className = 't-line live';
-    div.innerHTML = text + '<span class="t-cursor"></span>';
-    transcriptBody.appendChild(div);
+  // ===== 確定：認識中の行を確定行として編集可能にする =====
+  function finalizeLine(seq, text, insertAfterSeq) {
+    let div = null;
+    if (insertAfterSeq != null) {
+      // 行の分割で生まれた行。元の行のすぐ次に挿入する（一番最後には追加しない）
+      div = document.createElement('div');
+      const refDiv = transcriptBody.querySelector(`.t-line[data-seq="${insertAfterSeq}"]`);
+      if (refDiv && refDiv.nextSibling) {
+        transcriptBody.insertBefore(div, refDiv.nextSibling);
+      } else {
+        transcriptBody.appendChild(div);
+      }
+    } else {
+      div = transcriptBody.querySelector('.t-line.live');
+      if (!div) {
+        div = document.createElement('div');
+        transcriptBody.appendChild(div);
+      }
+    }
+    div.className = 't-line';
+    div.dataset.seq = seq;
+    div.dataset.original = text;
+    div.textContent = text;
+    div.contentEditable = 'true';
+    div.addEventListener('input', onLineEdited);
+    div.addEventListener('focus', onLineFocus);
+    div.addEventListener('blur', onLineBlur);
+    div.addEventListener('keydown', onLineKeydown);
     transcriptBody.scrollTop = transcriptBody.scrollHeight;
 
-    totalChars += text.length;
+    recountChars();
+  }
+
+  // ===== 確定行の手動修正 → サーバー経由でスクリーン側にも即時反映 =====
+  const editDebounce = {};
+  function onLineEdited(ev) {
+    const div = ev.currentTarget;
+    div.classList.toggle('edited', div.textContent !== div.dataset.original);
+    recountChars();
+
+    const seq = div.dataset.seq;
+    clearTimeout(editDebounce[seq]);
+    editDebounce[seq] = setTimeout(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'correction', seq: Number(seq), text: div.textContent }));
+      }
+    }, 200);
+  }
+
+  // 編集を始めるときは、赤字ハイライトのHTMLをいったん普通のテキストに戻す
+  // （contenteditable中にタグが混ざっているとカーソル位置がおかしくなるため）
+  function onLineFocus(ev) {
+    const div = ev.currentTarget;
+    div.textContent = div.textContent;
+  }
+
+  // 編集を終えたら、元の文字列との差分を計算し、変わった文字だけ赤色にする
+  function onLineBlur(ev) {
+    const div = ev.currentTarget;
+    const current = div.textContent;
+    div.classList.toggle('edited', current !== div.dataset.original);
+    div.innerHTML = diffHighlight(div.dataset.original, current);
+  }
+
+  // ===== 文の途中で改行されてしまった行を、カーソル位置で分割する =====
+  // Enter単体 = 編集を確定してフォーカスを外すだけ（分割しない）
+  // Shift+Enter = カーソルより前はこの行に残し、カーソルより後ろは
+  //   「次に既にある行」の先頭に合流させる（次の行がまだ無ければ新しい行として送る）
+  function onLineKeydown(ev) {
+    if (ev.key !== 'Enter') return;
+    if (ev.isComposing) return; // 日本語入力（IME）の変換確定のEnterは素通りさせる
+    ev.preventDefault();
+
+    const div = ev.currentTarget;
+
+    if (!ev.shiftKey) {
+      div.blur();
+      return;
+    }
+
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+
+    const range = sel.getRangeAt(0);
+    const preRange = range.cloneRange();
+    preRange.selectNodeContents(div);
+    preRange.setEnd(range.endContainer, range.endOffset);
+    const offset = preRange.toString().length;
+
+    const fullText = div.textContent;
+    const before = fullText.slice(0, offset);
+    const after = fullText.slice(offset).trim();
+
+    div.textContent = before;
+    div.classList.toggle('edited', before !== div.dataset.original);
+    recountChars();
+
+    // カーソル位置を、分割した場所（beforeの末尾）のまま維持する
+    // （textContentを書き換えると既定ではカーソルが行頭に飛んでしまうため）
+    if (div.firstChild) {
+      const restoreRange = document.createRange();
+      restoreRange.setStart(div.firstChild, before.length);
+      restoreRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(restoreRange);
+    }
+
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify({ type: 'correction', seq: Number(div.dataset.seq), text: before }));
+
+    if (!after) return;
+
+    const nextDiv = div.nextElementSibling;
+    if (nextDiv && nextDiv.dataset.seq) {
+      // 次の行が既にあるので、その先頭に合流させる（新しい行は作らない）。
+      // 「correction」ではなく「merge」として送ることで、赤字の差分表示を出さない
+      const mergedText = after + nextDiv.textContent;
+      ws.send(JSON.stringify({ type: 'merge', seq: Number(nextDiv.dataset.seq), text: mergedText }));
+    } else {
+      // 次の行がまだ無い（まだ認識中など）ので、新しい行として送る
+      ws.send(JSON.stringify({ type: 'split', afterSeq: Number(div.dataset.seq), text: after }));
+    }
+  }
+
+  // ===== 他クライアント（自分自身の送信の折り返しも含む）からの修正を反映 =====
+  function applyRemoteCorrection(seq, text) {
+    const div = transcriptBody.querySelector(`.t-line[data-seq="${seq}"]`);
+    if (!div) return;
+    if (document.activeElement === div) return; // 編集中の行は上書きしない
+    div.classList.toggle('edited', text !== div.dataset.original);
+    div.innerHTML = diffHighlight(div.dataset.original, text);
+    recountChars();
+  }
+
+  // ===== Shift+Enterでの合流を反映（差分の赤字は出さず、そのまま基準にする） =====
+  function applyMerge(seq, text) {
+    const div = transcriptBody.querySelector(`.t-line[data-seq="${seq}"]`);
+    if (!div) return;
+    if (document.activeElement === div) return; // 編集中の行は上書きしない
+    div.dataset.original = text; // 合流後の文章を新しい基準にするので、赤字は出ない
+    div.textContent = text;
+    div.classList.remove('edited');
+    originalTextBySeq[seq] = text;
+    recountChars();
+  }
+
+  // ===== 元の文字列と現在の文字列を比較し、変更箇所だけ<span>で囲んだHTMLを作る =====
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function diffHighlight(original, edited) {
+    const n = original.length, m = edited.length;
+    const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+    for (let i = 1; i <= n; i++) {
+      for (let j = 1; j <= m; j++) {
+        dp[i][j] = original[i - 1] === edited[j - 1]
+          ? dp[i - 1][j - 1] + 1
+          : Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+    const matched = new Array(m).fill(false);
+    let i = n, j = m;
+    while (i > 0 && j > 0) {
+      if (original[i - 1] === edited[j - 1]) {
+        matched[j - 1] = true;
+        i--; j--;
+      } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+        i--;
+      } else {
+        j--;
+      }
+    }
+
+    let html = '';
+    let buffer = '';
+    let inDiff = false;
+    for (let k = 0; k < m; k++) {
+      const isDiff = !matched[k];
+      if (isDiff !== inDiff && buffer) {
+        html += inDiff ? `<span class="diff-mark">${escapeHtml(buffer)}</span>` : escapeHtml(buffer);
+        buffer = '';
+      }
+      inDiff = isDiff;
+      buffer += edited[k];
+    }
+    if (buffer) html += inDiff ? `<span class="diff-mark">${escapeHtml(buffer)}</span>` : escapeHtml(buffer);
+    return html || escapeHtml(edited);
+  }
+
+  function recountChars() {
+    totalChars = 0;
+    transcriptBody.querySelectorAll('.t-line').forEach(el => {
+      totalChars += el.textContent.length;
+    });
     charCount.textContent = `${totalChars}文字`;
     statusCharcount.textContent = `文字数: ${totalChars}`;
   }

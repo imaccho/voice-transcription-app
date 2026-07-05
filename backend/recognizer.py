@@ -38,6 +38,16 @@ def _edit_distance(a: str, b: str) -> int:
     return dp[n][m]
 
 
+_SENTENCE_END_CHARS = "。！？!?」』"
+
+
+def ensure_period(text: str) -> str:
+    """文末に句読点が無ければ「。」を補う"""
+    if text and text[-1] not in _SENTENCE_END_CHARS:
+        return text + "。"
+    return text
+
+
 def correct_words(words: list[str], registered_terms: list[str], threshold: float = 0.34, max_ngram: int = 3) -> str:
     """表示許可リストの読みに近い単語(n-gram)を、登録済み表記に置き換える。
 
@@ -87,6 +97,10 @@ def correct_words(words: list[str], registered_terms: list[str], threshold: floa
 class VoskEngine:
     """1マイク分のストリーミング認識セッションを保持するエンジン。"""
 
+    # 無音が無いまま喋り続けた場合でも、この文字数を超えたら強制的に
+    # 区切って確定させる（早口で喋り続けると文字がどんどん縮小してしまうため）
+    MAX_PARTIAL_CHARS = 25
+
     def __init__(self, model_dir: str | Path, sample_rate: int = SAMPLE_RATE):
         self.model = Model(str(model_dir))
         self.sample_rate = sample_rate
@@ -111,18 +125,33 @@ class VoskEngine:
         部分結果・確定結果をそれぞれコールバックへ渡す。
         """
         rec = self.new_recognizer()
+
+        def finalize(natural_pause: bool) -> None:
+            """今の暫定認識結果を確定させて次に備える。
+            Result() は呼んだ時点までの認識結果を確定させつつ、
+            デコーダの状態をリセットして続けて音声を受け付けられるようにする。
+
+            natural_pause=True（無音を検知した本当の文の区切り）の時だけ
+            句点を補う。文字数超過による強制区切りは文の途中でしかないため、
+            句点を付けない。
+            """
+            result = json.loads(rec.Result())
+            words = [w["word"] for w in result.get("result", [])]
+            if words:
+                text = correct_words(words, self.registered_terms)
+                on_final(ensure_period(text) if natural_pause else text)
+
         for chunk in audio_chunks:
             if rec.AcceptWaveform(chunk):
-                result = json.loads(rec.Result())
-                words = [w["word"] for w in result.get("result", [])]
-                if words:
-                    on_final(correct_words(words, self.registered_terms))
+                finalize(natural_pause=True)
             else:
                 partial = json.loads(rec.PartialResult()).get("partial", "")
                 if partial:
                     on_partial(partial)
+                    if len(partial.replace(" ", "")) >= self.MAX_PARTIAL_CHARS:
+                        finalize(natural_pause=False)
 
         final = json.loads(rec.FinalResult())
         words = [w["word"] for w in final.get("result", [])]
         if words:
-            on_final(correct_words(words, self.registered_terms))
+            on_final(ensure_period(correct_words(words, self.registered_terms)))
