@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceSync — 会場スクリーン表示</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    background: #0d1b24;
+    color: #ffffff;
+    font-family: 'BIZ UDPGothic', 'Noto Sans JP', sans-serif;
+    overflow: hidden;
+  }
+  #stage {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6vh 8vw;
+    text-align: center;
+  }
+  #text {
+    font-size: 5vw;
+    font-weight: 700;
+    line-height: 1.6;
+    max-width: 100%;
+    word-break: keep-all;
+    transition: opacity 0.15s;
+  }
+  #partial {
+    opacity: 0.55;
+  }
+  #status {
+    position: fixed; bottom: 18px; right: 24px;
+    font-size: 0.9rem; color: rgba(255,255,255,0.35);
+    font-family: 'Inter', sans-serif;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #status .dot { width: 8px; height: 8px; border-radius: 50%; background: #6DC49A; }
+  #status.disconnected .dot { background: #F5845C; }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div id="text">表示待機中です</div>
+  </div>
+  <div id="status" class="disconnected"><span class="dot"></span><span id="status-label">接続中...</span></div>
+
+<script>
+  const textEl = document.getElementById('text');
+  const statusEl = document.getElementById('status');
+  const statusLabel = document.getElementById('status-label');
+
+  let finalText = '';
+
+  function render() {
+    textEl.innerHTML = finalText;
+  }
+
+  function connect() {
+    const ws = new WebSocket(`ws://${location.host}/ws`);
+    ws.onopen = () => {
+      statusEl.classList.remove('disconnected');
+      statusLabel.textContent = '接続済み';
+    };
+    ws.onclose = () => {
+      statusEl.classList.add('disconnected');
+      statusLabel.textContent = '切断されました。再接続中...';
+      setTimeout(connect, 2000);
+    };
+    ws.onmessage = (ev) => {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === 'final') {
+        finalText = msg.text;
+        render();
+      } else if (msg.type === 'partial') {
+        textEl.innerHTML = finalText + `<span id="partial">${msg.text}</span>`;
+      }
+    };
+  }
+  connect();
+</script>
+</body>
+</html>

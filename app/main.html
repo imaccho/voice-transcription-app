@@ -504,20 +504,11 @@
 </div>
 
 <script>
-  const SCRIPT_LINES = [
-    "本日はお忙しい中、お集まりいただきありがとうございます。",
-    "ただいまより、第12回感謝の集い、表彰式を開催いたします。",
-    "はじめに、主催者よりご挨拶を申し上げます。",
-    "今年度、特に功績のあった皆様をご紹介いたします。",
-    "それでは、表彰状の授与に移らせていただきます。"
-  ];
-
   let recording = false;
   let timerHandle = null;
-  let lineHandle = null;
   let elapsedSec = 0;
-  let lineIndex = 0;
   let totalChars = 0;
+  let ws = null;
 
   const micBtn = document.getElementById('mic-btn');
   const micLevel = document.getElementById('mic-level');
@@ -529,13 +520,72 @@
   const charCount = document.getElementById('char-count');
   const statusCharcount = document.getElementById('status-charcount');
   const previewText = document.getElementById('preview-text');
+  const micSelect = document.getElementById('mic-select');
+
+  // ===== WebSocket（バックエンドからの認識結果を受信） =====
+  function connectWS() {
+    ws = new WebSocket(`ws://${location.host}/ws`);
+    ws.onmessage = (ev) => {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === 'final') {
+        addTranscriptLine(msg.text);
+        previewText.textContent = msg.text;
+      } else if (msg.type === 'partial') {
+        previewText.textContent = msg.text;
+      } else if (msg.type === 'stopped' && recording) {
+        // WAVファイルの再生終了など、バックエンド側で認識が止まった場合
+        recording = false;
+        setIdleUI();
+      }
+    };
+    ws.onclose = () => setTimeout(connectWS, 2000);
+  }
+  connectWS();
+
+  // ===== マイクデバイス一覧の取得 =====
+  async function loadDevices() {
+    try {
+      const res = await fetch('/api/devices');
+      const data = await res.json();
+      micSelect.innerHTML = '';
+      if (data.devices && data.devices.length) {
+        data.devices.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.index;
+          opt.textContent = d.name;
+          micSelect.appendChild(opt);
+        });
+      } else {
+        const opt = document.createElement('option');
+        opt.textContent = 'マイクが見つかりません';
+        micSelect.appendChild(opt);
+      }
+    } catch (e) {
+      console.warn('マイク一覧の取得に失敗しました', e);
+    }
+  }
+  loadDevices();
 
   function toggleRecording() {
-    recording = !recording;
-    if (recording) startRecording(); else stopRecording();
+    recording ? stopRecording() : startRecording();
   }
 
-  function startRecording() {
+  async function startRecording() {
+    const deviceIndex = micSelect.value && !Number.isNaN(parseInt(micSelect.value, 10))
+      ? parseInt(micSelect.value, 10) : null;
+
+    const res = await fetch('/api/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device_index: deviceIndex }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      alert('文字起こしを開始できませんでした: ' + (data.error || '不明なエラー'));
+      return;
+    }
+
+    recording = true;
     micBtn.classList.add('rec');
     micLevel.classList.add('active');
     controlStatus.classList.add('live');
@@ -543,30 +593,28 @@
     controlSub.textContent = 'マイクから音声を取得し、リアルタイムで変換しています';
     if (transcriptEmpty) transcriptEmpty.remove();
 
+    elapsedSec = 0;
     timerHandle = setInterval(() => {
       elapsedSec++;
       const m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
       const s = String(elapsedSec % 60).padStart(2, '0');
       controlTimer.textContent = `${m}:${s}`;
     }, 1000);
-
-    lineHandle = setInterval(() => {
-      if (lineIndex >= SCRIPT_LINES.length) { lineIndex = 0; }
-      const line = SCRIPT_LINES[lineIndex];
-      addTranscriptLine(line);
-      previewText.textContent = line;
-      lineIndex++;
-    }, 3200);
   }
 
-  function stopRecording() {
+  async function stopRecording() {
+    await fetch('/api/stop', { method: 'POST' });
+    recording = false;
+    setIdleUI();
+  }
+
+  function setIdleUI() {
     micBtn.classList.remove('rec');
     micLevel.classList.remove('active');
     controlStatus.classList.remove('live');
     controlStatus.innerHTML = '<span class="status-dot"></span>待機中';
     controlSub.textContent = 'マイクボタンを押すと文字起こしを再開します';
     clearInterval(timerHandle);
-    clearInterval(lineHandle);
   }
 
   function addTranscriptLine(text) {
