@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 import json
 import queue
+import sys
 import tempfile
 import threading
 from pathlib import Path
@@ -28,8 +29,20 @@ from audio_source import MicSource, WavFileSource, list_input_devices
 from doc_extract import extract_name_candidates
 from recognizer import VoskEngine, ensure_period
 
-APP_DIR = Path(__file__).parent.parent / "app"
-MODEL_DIR = Path(__file__).parent.parent / "poc" / "vosk-check" / "vosk-model-small-ja-0.22"
+
+def resource_path(*parts: str) -> Path:
+    """開発時はプロジェクトルート基準、PyInstallerでパッケージ後は
+    バンドル内の一時展開ディレクトリ（sys._MEIPASS）基準でリソースを解決する。
+    """
+    if hasattr(sys, "_MEIPASS"):
+        base = Path(sys._MEIPASS)
+    else:
+        base = Path(__file__).parent.parent
+    return base.joinpath(*parts)
+
+
+APP_DIR = resource_path("app")
+MODEL_DIR = resource_path("backend", "models", "vosk-model-small-ja-0.22")
 
 app = FastAPI()
 

@@ -34,6 +34,9 @@ def _get_ginza():
         import spacy
         _ginza_nlp = spacy.load("ja_ginza")
     except Exception:
+        import traceback
+        print("=== GiNZA読み込み失敗 ===")
+        traceback.print_exc()
         _ginza_load_failed = True
         _ginza_nlp = None
     return _ginza_nlp
