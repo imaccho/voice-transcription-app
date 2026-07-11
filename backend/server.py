@@ -276,4 +276,5 @@ def display():
     return FileResponse(APP_DIR / "display.html")
 
 
+app.mount("/fonts", StaticFiles(directory=APP_DIR / "fonts"), name="fonts")
 app.mount("/app", StaticFiles(directory=APP_DIR), name="app")
