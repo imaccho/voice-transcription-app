@@ -62,16 +62,32 @@ def correct_words(words: list[str], registered_terms: list[dict], threshold: flo
     if not registered_terms:
         return "".join(words)
 
+    # 各n-gram区間の読みは登録語に依存しないため、登録語の数だけ回す前に
+    # 一度だけ計算しておく。登録件数が多い（数百件規模の来賓・受賞者リスト等）
+    # 場合、term数だけpykakasiを呼び直すと1回のfinalizeが数百msi〜数秒かかり、
+    # マイク入力にリアルタイムで追いつけずバックログが溜まる原因になっていた。
+    span_readings: dict[tuple[int, int], str] = {}
+    for n in range(1, max_ngram + 1):
+        for start in range(0, len(words) - n + 1):
+            span = "".join(words[start:start + n])
+            span_readings[(start, n)] = to_reading(span)
+
     candidates = []
     for entry in registered_terms:
         term = entry["name"]
         term_reading = (entry.get("reading") or to_reading(term)).replace(" ", "").replace("　", "")
+        term_len = max(len(term_reading), 1)
         for n in range(1, max_ngram + 1):
             for start in range(0, len(words) - n + 1):
-                span = "".join(words[start:start + n])
-                span_reading = to_reading(span)
+                span_reading = span_readings[(start, n)]
+                # 編集距離は文字数差以上には絶対にならないため、その時点で
+                # 既にscoreがthresholdを超えると分かる場合はDP計算自体を省略する
+                # （登録名が数百件規模になると、この枝刈りが無いと全組み合わせに
+                # 編集距離計算が必要になり処理が追いつかなくなるため）
+                if abs(term_len - len(span_reading)) / term_len >= threshold:
+                    continue
                 dist = _edit_distance(term_reading, span_reading)
-                score = dist / max(len(term_reading), 1)
+                score = dist / term_len
                 if score < threshold:
                     candidates.append((score, start, start + n, term))
 
