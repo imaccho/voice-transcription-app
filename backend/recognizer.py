@@ -48,8 +48,12 @@ def ensure_period(text: str) -> str:
     return text
 
 
-def correct_words(words: list[str], registered_terms: list[str], threshold: float = 0.34, max_ngram: int = 3) -> str:
+def correct_words(words: list[str], registered_terms: list[dict], threshold: float = 0.34, max_ngram: int = 3) -> str:
     """表示許可リストの読みに近い単語(n-gram)を、登録済み表記に置き換える。
+
+    registered_terms は [{"name": "髙橋", "reading": "たかはし"}, ...] の形式。
+    reading は主催者が確認・修正した読みをそのまま使う（pykakasiでの
+    自動推定は人名では外れやすいため、登録時に確定した読みを信頼する）。
 
     同スコアの候補は大きい区間を優先することで、1つの誤認識を
     複数の部分区間として二重に置換してしまう事故を防ぐ
@@ -59,8 +63,9 @@ def correct_words(words: list[str], registered_terms: list[str], threshold: floa
         return "".join(words)
 
     candidates = []
-    for term in registered_terms:
-        term_reading = to_reading(term)
+    for entry in registered_terms:
+        term = entry["name"]
+        term_reading = (entry.get("reading") or to_reading(term)).replace(" ", "").replace("　", "")
         for n in range(1, max_ngram + 1):
             for start in range(0, len(words) - n + 1):
                 span = "".join(words[start:start + n])
@@ -104,10 +109,12 @@ class VoskEngine:
     def __init__(self, model_dir: str | Path, sample_rate: int = SAMPLE_RATE):
         self.model = Model(str(model_dir))
         self.sample_rate = sample_rate
-        self.registered_terms: list[str] = []
+        self.registered_terms: list[dict] = []
 
-    def set_registered_terms(self, terms: list[str]) -> None:
-        """表示許可リストを更新する（画面側の名前登録UIから呼ばれる想定）"""
+    def set_registered_terms(self, terms: list[dict]) -> None:
+        """表示許可リストを更新する（画面側の名前登録UIから呼ばれる想定）。
+        terms は [{"name": "...", "reading": "..."}, ...] の形式。
+        """
         self.registered_terms = list(terms)
 
     def new_recognizer(self) -> KaldiRecognizer:

@@ -15,15 +15,17 @@ from __future__ import annotations
 import asyncio
 import json
 import queue
+import tempfile
 import threading
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from audio_source import MicSource, WavFileSource, list_input_devices
+from doc_extract import extract_name_candidates
 from recognizer import VoskEngine, ensure_period
 
 APP_DIR = Path(__file__).parent.parent / "app"
@@ -91,12 +93,74 @@ def get_devices():
         return {"devices": [], "error": str(e)}
 
 
+@app.get("/api/names")
+def get_names():
+    """現在の表示許可リストを返す"""
+    return {"terms": engine.registered_terms}
+
+
 @app.post("/api/names")
 def set_names(payload: dict):
-    """表示許可リストを更新する（画面側の名前登録UIから呼ばれる想定）"""
+    """表示許可リストを更新する。
+    payload.terms は [{"name": "...", "reading": "..."}, ...] の形式。
+    mode="add"（既定）なら既存リストに追加（同名は上書き）、
+    mode="replace" なら全体を置き換える。
+    """
     terms = payload.get("terms", [])
-    engine.set_registered_terms(terms)
-    return {"ok": True, "count": len(terms)}
+    mode = payload.get("mode", "add")
+
+    if mode == "replace":
+        merged = {t["name"]: t for t in terms}
+    else:
+        merged = {t["name"]: t for t in engine.registered_terms}
+        for t in terms:
+            merged[t["name"]] = t
+
+    engine.set_registered_terms(list(merged.values()))
+    return {"ok": True, "count": len(merged)}
+
+
+@app.delete("/api/names/{name}")
+def delete_name(name: str):
+    """表示許可リストから1件削除する"""
+    remaining = [t for t in engine.registered_terms if t["name"] != name]
+    engine.set_registered_terms(remaining)
+    return {"ok": True, "count": len(remaining)}
+
+
+@app.put("/api/names/{name}")
+def update_name(name: str, payload: dict):
+    """表示許可リストの1件を修正する（氏名・読みの変更）"""
+    new_name = payload.get("name", "").strip()
+    new_reading = payload.get("reading", "").strip()
+    if not new_name:
+        return {"ok": False, "error": "氏名を入力してください"}
+
+    remaining = [t for t in engine.registered_terms if t["name"] != name]
+    remaining = [t for t in remaining if t["name"] != new_name]
+    remaining.append({"name": new_name, "reading": new_reading})
+    engine.set_registered_terms(remaining)
+    return {"ok": True, "count": len(remaining)}
+
+
+@app.post("/api/extract-names")
+async def extract_names(file: UploadFile = File(...)):
+    """事前学習資料（PDF/DOCX/PPTX）から氏名候補を抽出する。
+    テキスト層があるページ／スライドのみ対象（OCRは対象外）。
+    """
+    suffix = Path(file.filename).suffix.lower()
+    if suffix not in (".pdf", ".docx", ".pptx"):
+        return {"ok": False, "error": f"未対応のファイル形式です: {suffix}"}
+
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as tmp:
+        tmp.write(await file.read())
+        tmp.flush()
+        try:
+            result = extract_name_candidates(tmp.name, file.filename)
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+    return {"ok": True, **result}
 
 
 @app.post("/api/start")

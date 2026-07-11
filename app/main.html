@@ -387,15 +387,89 @@
     display: flex; flex-direction: column;
     box-shadow: 0 2px 14px rgba(30,58,74,0.05);
   }
-  .name-chips { display: flex; flex-wrap: wrap; gap: 8px; overflow-y: auto; }
+  .name-chips { display: flex; flex-wrap: wrap; gap: 8px; overflow-y: auto; align-content: flex-start; }
   .name-chip {
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--mint-bg); border: 1px solid var(--mint-ll);
     color: #2d8f60; font-size: 0.78rem; font-weight: 700;
-    padding: 5px 12px 5px 8px; border-radius: 20px;
+    padding: 5px 8px 5px 12px; border-radius: 20px;
   }
-  .name-chip .ico { width: 20px; height: 20px; border-radius: 50%; background: var(--mint); color: var(--white); font-size: 0.6rem; }
   .name-chip .kana { color: #4fa87d; font-weight: 500; font-size: 0.68rem; }
+  .name-chip .chip-display { cursor: pointer; border-radius: 12px; padding: 2px 4px; margin: -2px -4px; transition: background 0.15s; }
+  .name-chip .chip-display:hover { background: rgba(61,170,122,0.18); }
+  .name-chip .chip-actions { display: inline-flex; align-items: center; gap: 4px; }
+  .name-chip .chip-del, .name-chip .chip-edit, .name-chip .chip-save {
+    width: 18px; height: 18px; border-radius: 50%; border: none;
+    background: rgba(61,170,122,0.18); color: #2d8f60; cursor: pointer;
+    font-size: 0.65rem; line-height: 1; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .name-chip .chip-del:hover { background: var(--peach-l); color: var(--peach); }
+  .name-chip .chip-edit:hover { background: var(--sky-ll); color: var(--sky); }
+  .name-chip .chip-save { background: var(--mint); color: var(--white); }
+  .name-chip .chip-save:hover { background: #2d8f60; }
+  .name-chip .chip-edit-form { display: inline-flex; align-items: center; gap: 4px; }
+  .name-chip .chip-edit-form input {
+    border: 1px solid var(--mint-ll); border-radius: 8px; padding: 3px 7px;
+    font-family: var(--font); font-size: 0.75rem; color: var(--ink); background: var(--white);
+    outline: none; width: 78px;
+  }
+  .name-chip .chip-edit-form input:focus { border-color: var(--mint); }
+  .names-empty { font-size: 0.8rem; color: var(--ink-40); padding: 12px 0; }
+  .btn-add-doc {
+    margin-top: 12px; width: 100%; padding: 10px; border: 1.5px dashed var(--sky-ll);
+    border-radius: 10px; background: var(--sky-bg); color: var(--sky);
+    font-family: var(--font); font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .btn-add-doc:hover { background: var(--sky-ll); }
+
+  /* ===== 資料アップロードモーダル ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(30,58,74,0.45);
+    z-index: 500; display: flex; align-items: center; justify-content: center;
+  }
+  .modal-box {
+    background: var(--white); border-radius: var(--r-lg); width: 480px; max-width: 92vw;
+    max-height: 82vh; display: flex; flex-direction: column;
+    box-shadow: 0 24px 64px rgba(30,58,74,0.3);
+  }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px; border-bottom: 1px solid var(--ink-06); flex-shrink: 0;
+  }
+  .modal-title { font-size: 0.98rem; font-weight: 700; color: var(--ink); }
+  .modal-close {
+    width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--sky-bg);
+    color: var(--ink-70); font-size: 1rem; cursor: pointer; line-height: 1;
+  }
+  .modal-close:hover { background: var(--sky-ll); }
+  .modal-body { padding: 20px; overflow-y: auto; }
+  .modal-note { font-size: 0.78rem; color: var(--ink-70); line-height: 1.7; margin-bottom: 12px; }
+  #doc-file-input {
+    width: 100%; margin-bottom: 14px; font-size: 0.82rem;
+    padding: 8px; border: 1.5px solid var(--sky-ll); border-radius: 10px; background: var(--sky-bg);
+  }
+  .candidate-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--ink-06);
+  }
+  .candidate-row:last-child { border-bottom: none; }
+  .candidate-row input[type=checkbox] { margin-top: 10px; width: 16px; height: 16px; accent-color: var(--sky); flex-shrink: 0; }
+  .candidate-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .candidate-fields .field-row { display: flex; gap: 6px; align-items: center; }
+  .candidate-fields label { font-size: 0.68rem; color: var(--ink-40); width: 34px; flex-shrink: 0; }
+  .candidate-fields input[type=text] {
+    flex: 1; padding: 6px 9px; border: 1.5px solid var(--sky-ll); border-radius: 8px;
+    font-family: var(--font); font-size: 0.82rem; color: var(--ink); background: var(--sky-bg); outline: none;
+  }
+  .candidate-fields input[type=text]:focus { border-color: var(--sky); background: var(--white); }
+  .candidate-badge {
+    font-size: 0.62rem; font-weight: 700; padding: 1px 7px; border-radius: 8px; flex-shrink: 0;
+  }
+  .candidate-badge.table { background: var(--mint-bg); color: var(--mint); }
+  .candidate-badge.ner { background: var(--sky-bg); color: var(--sky); }
+  .candidate-badge.guess { background: var(--peach-l); color: var(--peach); }
 
   /* Bottom status bar */
   .statusbar {
@@ -558,17 +632,39 @@
       <div class="names-card">
         <div class="card-head">
           <div class="card-title"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.3"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 5.2a3.3 3.3 0 0 1 0 6.6"/><path d="M17.5 20a6.5 6.5 0 0 0-3-5.4"/></svg></span>表示許可リスト</div>
-          <span class="char-badge">5名 登録済み</span>
+          <span class="char-badge" id="names-count">0名 登録済み</span>
         </div>
-        <div class="name-chips">
-          <span class="name-chip"><span class="ico">✓</span>田中 太郎<span class="kana">たなか たろう</span></span>
-          <span class="name-chip"><span class="ico">✓</span>佐藤 次郎<span class="kana">さとう じろう</span></span>
-          <span class="name-chip"><span class="ico">✓</span>髙橋 美咲<span class="kana">たかはし みさき</span></span>
-          <span class="name-chip"><span class="ico">✓</span>山本 花子<span class="kana">やまもと はなこ</span></span>
-          <span class="name-chip"><span class="ico">✓</span>渡邉 健一<span class="kana">わたなべ けんいち</span></span>
-        </div>
+        <div class="name-chips" id="name-chips"></div>
+        <button class="btn-add-doc" onclick="openDocModal()">＋ 資料から名前を追加</button>
       </div>
 
+    </div>
+  </div>
+
+  <!-- 資料アップロード・候補確認モーダル -->
+  <div class="modal-overlay" id="doc-modal-overlay" style="display:none">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-title">資料から名前を追加</div>
+        <button class="modal-close" onclick="closeDocModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="doc-upload-area">
+          <p class="modal-note">PDF・Word（.docx）・PowerPoint（.pptx）に対応しています。表に「氏名」「ふりがな」の列があれば優先的に読み取ります。</p>
+          <input type="file" id="doc-file-input" accept=".pdf,.docx,.pptx">
+          <button class="btn-manual-send" onclick="uploadDoc()">アップロードして抽出</button>
+        </div>
+        <div id="doc-loading" style="display:none">
+          <div class="spinner-lg" style="margin:24px auto"></div>
+          <p class="modal-note" style="text-align:center">資料を解析しています...</p>
+        </div>
+        <div id="doc-error" class="alert error" style="display:none"></div>
+        <div id="doc-candidates" style="display:none">
+          <p class="modal-note" id="doc-candidates-summary"></p>
+          <div id="doc-candidates-list"></div>
+          <button class="btn-manual-send" style="width:100%;margin-top:14px" onclick="registerSelectedCandidates()">選択した名前を登録</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -716,6 +812,241 @@
     }
   }
   loadDevices();
+
+  // ===== 表示許可リスト（名前）の読み込み・表示 =====
+  let registeredNames = [];
+
+  async function loadNames() {
+    try {
+      const res = await fetch('/api/names');
+      const data = await res.json();
+      registeredNames = data.terms || [];
+      renderNameChips(registeredNames);
+    } catch (e) {
+      console.warn('表示許可リストの取得に失敗しました', e);
+    }
+  }
+
+  function renderNameChips(terms) {
+    const wrap = document.getElementById('name-chips');
+    const count = document.getElementById('names-count');
+    count.textContent = `${terms.length}名 登録済み`;
+    if (!terms.length) {
+      wrap.innerHTML = '<div class="names-empty">まだ登録されていません。下のボタンから資料を読み込ませてください。</div>';
+      return;
+    }
+    wrap.innerHTML = terms.map((t, i) => `
+      <span class="name-chip" id="name-chip-${i}">
+        <span class="chip-display" id="chip-display-${i}" title="選択中の文字と置き換える" onmousedown="event.preventDefault()" onclick="onNameChipClick(${i})">
+          ${escapeHtml(t.name)}<span class="kana">${escapeHtml(t.reading || '')}</span>
+        </span>
+        <span class="chip-edit-form" id="chip-edit-form-${i}" style="display:none">
+          <input type="text" id="chip-edit-name-${i}" value="${escapeHtml(t.name)}" placeholder="氏名">
+          <input type="text" id="chip-edit-reading-${i}" value="${escapeHtml(t.reading || '')}" placeholder="読み">
+          <button class="chip-save" title="保存" onclick="saveEditName(${i})">✓</button>
+        </span>
+        <span class="chip-actions" id="chip-actions-${i}">
+          <button class="chip-edit" title="編集" onclick="startEditName(${i})">✎</button>
+          <button class="chip-del" title="削除" onclick="deleteName('${encodeURIComponent(t.name)}')">×</button>
+        </span>
+      </span>
+    `).join('');
+  }
+
+  function startEditName(i) {
+    document.getElementById(`chip-display-${i}`).style.display = 'none';
+    document.getElementById(`chip-actions-${i}`).style.display = 'none';
+    document.getElementById(`chip-edit-form-${i}`).style.display = 'inline-flex';
+    document.getElementById(`chip-edit-name-${i}`).focus();
+  }
+
+  async function saveEditName(i) {
+    const oldName = registeredNames[i].name;
+    const newName = document.getElementById(`chip-edit-name-${i}`).value.trim();
+    const newReading = document.getElementById(`chip-edit-reading-${i}`).value.trim();
+    if (!newName) return;
+    await fetch(`/api/names/${encodeURIComponent(oldName)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName, reading: newReading }),
+    });
+    loadNames();
+  }
+
+  async function deleteName(encodedName) {
+    await fetch(`/api/names/${encodedName}`, { method: 'DELETE' });
+    loadNames();
+  }
+  loadNames();
+
+  // ===== 文字を選択→表示許可リストの名前をクリックして置き換える =====
+  // ポップアップは出さず、選択状態だけを静かに覚えておく。
+  // 名前以外を選んで普通に修正する操作を邪魔しないようにするため。
+  let pendingReplaceRange = null;
+  let pendingReplaceDiv = null;
+
+  // 文字起こしパネルの中でのマウス操作の時だけ選択状態を更新する。
+  // ドキュメント全体を対象にすると、チップをクリックした瞬間の mouseup で
+  // 「選択が解除された」と判定され、置き換え対象の情報が消えてしまうため。
+  transcriptBody.addEventListener('mouseup', () => setTimeout(updatePendingSelection, 0));
+  transcriptBody.addEventListener('keyup', (ev) => {
+    if (ev.shiftKey || ev.key === 'Shift') setTimeout(updatePendingSelection, 0);
+  });
+
+  function updatePendingSelection() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+      pendingReplaceRange = null;
+      pendingReplaceDiv = null;
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    const node = range.commonAncestorContainer;
+    const el = node.nodeType === 3 ? node.parentElement : node;
+    const lineEl = el ? el.closest('.t-line[data-seq]') : null;
+    if (!lineEl) {
+      pendingReplaceRange = null;
+      pendingReplaceDiv = null;
+      return;
+    }
+    pendingReplaceRange = range.cloneRange();
+    pendingReplaceDiv = lineEl;
+  }
+
+  // 表示許可リストの名前をクリックした時、選択中のテキストがあれば置き換える
+  function onNameChipClick(idx) {
+    if (!pendingReplaceRange || !pendingReplaceDiv) return;
+    const name = registeredNames[idx].name;
+    const div = pendingReplaceDiv;
+
+    pendingReplaceRange.deleteContents();
+    pendingReplaceRange.insertNode(document.createTextNode(name));
+    div.normalize();
+
+    window.getSelection().removeAllRanges();
+
+    div.classList.toggle('edited', div.textContent !== div.dataset.original);
+    recountChars();
+    const seq = div.dataset.seq;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'correction', seq: Number(seq), text: div.textContent }));
+    }
+
+    pendingReplaceRange = null;
+    pendingReplaceDiv = null;
+  }
+
+  // ===== 資料アップロード・候補確認モーダル =====
+  let docCandidates = [];
+
+  function openDocModal() {
+    document.getElementById('doc-modal-overlay').style.display = 'flex';
+    document.getElementById('doc-upload-area').style.display = 'block';
+    document.getElementById('doc-loading').style.display = 'none';
+    document.getElementById('doc-error').style.display = 'none';
+    document.getElementById('doc-candidates').style.display = 'none';
+    document.getElementById('doc-file-input').value = '';
+  }
+  function closeDocModal() {
+    document.getElementById('doc-modal-overlay').style.display = 'none';
+  }
+
+  async function uploadDoc() {
+    const input = document.getElementById('doc-file-input');
+    const file = input.files[0];
+    if (!file) { alert('ファイルを選択してください'); return; }
+
+    document.getElementById('doc-upload-area').style.display = 'none';
+    document.getElementById('doc-error').style.display = 'none';
+    document.getElementById('doc-loading').style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/extract-names', { method: 'POST', body: formData });
+      const data = await res.json();
+      document.getElementById('doc-loading').style.display = 'none';
+
+      if (!data.ok) {
+        document.getElementById('doc-upload-area').style.display = 'block';
+        const err = document.getElementById('doc-error');
+        err.style.display = 'flex';
+        err.textContent = data.error || '抽出に失敗しました';
+        return;
+      }
+
+      docCandidates = data.candidates || [];
+      renderCandidates(data);
+    } catch (e) {
+      document.getElementById('doc-loading').style.display = 'none';
+      document.getElementById('doc-upload-area').style.display = 'block';
+      const err = document.getElementById('doc-error');
+      err.style.display = 'flex';
+      err.textContent = 'アップロードに失敗しました: ' + e;
+    }
+  }
+
+  function renderCandidates(data) {
+    const listEl = document.getElementById('doc-candidates-list');
+    const summaryEl = document.getElementById('doc-candidates-summary');
+
+    if (!docCandidates.length) {
+      summaryEl.textContent = '名前の候補が見つかりませんでした。';
+      listEl.innerHTML = '';
+    } else {
+      let summary = `${docCandidates.length}件の候補が見つかりました。登録する名前を選び、読み仮名を確認してください。`;
+      if (data.unreadablePages > 0) {
+        summary += `（${data.unreadablePages}ページはテキストとして読み取れませんでした）`;
+      }
+      if (!data.nerAvailable) {
+        summary += '（自由文からの人名検出は現在利用できません。表形式の候補のみです）';
+      }
+      summaryEl.textContent = summary;
+
+      listEl.innerHTML = docCandidates.map((c, i) => `
+        <div class="candidate-row">
+          <input type="checkbox" id="cand-check-${i}" ${c.source === 'table' ? 'checked' : ''}>
+          <div class="candidate-fields">
+            <div class="field-row">
+              <label>氏名</label>
+              <input type="text" id="cand-name-${i}" value="${escapeHtml(c.name)}">
+              <span class="candidate-badge ${c.source}">${c.source === 'table' ? '表' : 'NER'}</span>
+            </div>
+            <div class="field-row">
+              <label>読み</label>
+              <input type="text" id="cand-reading-${i}" value="${escapeHtml(c.reading)}">
+              ${c.readingGuessed ? '<span class="candidate-badge guess">要確認</span>' : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('doc-candidates').style.display = 'block';
+  }
+
+  async function registerSelectedCandidates() {
+    const selected = [];
+    docCandidates.forEach((c, i) => {
+      const checked = document.getElementById(`cand-check-${i}`).checked;
+      if (!checked) return;
+      const name = document.getElementById(`cand-name-${i}`).value.trim();
+      const reading = document.getElementById(`cand-reading-${i}`).value.trim();
+      if (name) selected.push({ name, reading });
+    });
+
+    if (!selected.length) { closeDocModal(); return; }
+
+    await fetch('/api/names', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ terms: selected, mode: 'add' }),
+    });
+
+    closeDocModal();
+    loadNames();
+  }
 
   function toggleRecording() {
     recording ? stopRecording() : startRecording();
